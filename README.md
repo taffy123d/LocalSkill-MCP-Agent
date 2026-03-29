@@ -124,14 +124,19 @@
 
 ## 配置
 
-在 `.env` 文件中填写 API 密钥：
+- ##### 在前端配置api密钥
+- ##### 或在 `.env` 文件中填写 API 密钥：
 
 ```env
-# 火山引擎豆包 API 密钥
-DOUBAO_API_KEY=你的API密钥
-DOUBAO_ENDPOINT_ID=你的终端ID
-DOUBAO_BASE_URL=https://ark.cn-beijing.volces.com/api/v3/chat/completions
+# OpenAI 兼容格式的 API 配置
+OPENAI_API_KEY=你的API密钥
+OPENAI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+OPENAI_MODEL=你的模型ID
 ```
+
+支持的 API：
+- **豆包/火山引擎**（推荐）：完全兼容 OpenAI 格式，支持 function calling
+- **讯飞星火**：基础对话支持，function calling 需要额外配置
 
 ## 运行
 
@@ -185,8 +190,8 @@ curl -X POST http://localhost:5000/api/chat \
   -H "Content-Type: application/json" \
   -d '{
     "api_key": "你的API密钥",
-    "endpoint_id": "你的终端ID",
-    "base_url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+    "model": "你的模型ID",
+    "base_url": "https://ark.cn-beijing.volces.com/api/v3",
     "message": "北京天气",
     "session_id": "default"
   }'
@@ -199,8 +204,8 @@ curl -X POST http://localhost:5000/api/chat/stream \
   -H "Content-Type: application/json" \
   -d '{
     "api_key": "你的API密钥",
-    "endpoint_id": "你的终端ID",
-    "base_url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+    "model": "你的模型ID",
+    "base_url": "https://ark.cn-beijing.volces.com/api/v3",
     "message": "北京天气",
     "session_id": "default"
   }'
@@ -578,5 +583,32 @@ pip install 包名称
 3. **部署优化**：使用 Docker 容器化部署
 4. **技能市场**：创建技能市场，支持用户分享和下载技能
 5. **模型切换**：支持切换不同的大语言模型
+
+## 更新日志
+
+### 2026-03-29 重大更新
+
+#### API 调用方式升级
+- **httpx → OpenAI SDK**：所有 API 调用从 `httpx` 直接 HTTP 请求改为 `openai>=1.0.0` SDK 方式
+- **配置字段重命名**：
+  - `DOUBAO_API_KEY` → `OPENAI_API_KEY`
+  - `DOUBAO_ENDPOINT_ID` → `OPENAI_MODEL`
+  - `DOUBAO_BASE_URL` → `OPENAI_BASE_URL`（去掉了 `/chat/completions` 后缀）
+
+#### 工具调用优化
+- **Schema 清理**：自动移除 `title`、`default` 等豆包 API 不支持的字段
+- **Description 清理**：压缩多余空白字符，优化格式
+- **消息转换**：添加 `_msg_to_dict()` 函数，正确处理 OpenAI SDK 返回的 `ChatCompletionMessage` 对象
+- **第二次调用**：修复工具调用后二次请求的消息格式问题
+
+#### Bug 修复
+- ✅ 修复 "Object of type ChatCompletionMessage is not JSON serializable" 错误
+- ✅ 修复消息历史保存时的类型转换问题
+- ✅ 添加详细的异常堆栈跟踪，便于调试
+
+#### 架构改进
+- 添加 `_msg_to_dict()` 辅助函数，统一消息格式转换
+- 添加 API 类型检测（讯飞 API 自动跳过 tools 参数）
+- 优化 `chat()` 路由的异常处理和日志输出
 
 ---
