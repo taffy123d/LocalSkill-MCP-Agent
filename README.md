@@ -62,7 +62,7 @@
 ## 环境要求
 
 - Python 3.11+
-- 火山引擎豆包 API 密钥（获取 AK/SK）
+- openaiSDK(api)
 - uv 包管理工具（推荐）或 pip
 
 ## 安装
@@ -134,9 +134,7 @@ OPENAI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 OPENAI_MODEL=你的模型ID
 ```
 
-支持的 API：
-- **豆包/火山引擎**（推荐）：完全兼容 OpenAI 格式，支持 function calling
-- **讯飞星火**：基础对话支持，function calling 需要额外配置
+
 
 ## 运行
 
