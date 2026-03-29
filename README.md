@@ -343,6 +343,169 @@ register_my_skill(mcp)  # 添加这一行
 5. **错误处理**：捕获异常并返回友好提示
 6. **参数类型**：使用类型注解
 
+## 如何创建复杂 Skill（带 SKILL.md）
+
+对于功能较复杂的技能，建议创建独立的 skill 目录，包含技能实现和 SKILL.md 描述文件。
+
+### 目录结构
+
+```
+skills/
+└── my_complex_skill/          # skill 目录
+    ├── __init__.py            # 导出配置（必选）
+    ├── my_skill.py            # 技能实现（必选）
+    └── SKILL.md               # skill 描述文档（必选）
+```
+
+### 步骤 1：创建 skill 目录和实现文件
+
+在 `skills/` 目录下创建新的 skill 目录，例如 `skills/my_complex_skill/`
+
+#### 1.1 创建技能实现文件 `my_skill.py`
+
+```python
+"""我的复杂技能实现"""
+from mcp.server.fastmcp import FastMCP
+from duckduckgo_search import AsyncDuckDuckGoSearcher  # 示例依赖
+
+def register_my_complex_skill(mcp: FastMCP):
+    """注册复杂技能到 MCP 服务"""
+    
+    @mcp.tool()
+    async def my_complex_skill(query: str, limit: int = 5) -> str:
+        """
+        我的复杂技能描述
+        
+        Args:
+            query: 查询关键词
+            limit: 返回结果数量，默认5
+        
+        Returns:
+            格式化的搜索结果
+        """
+        try:
+            async with AsyncDuckDuckGoSearcher() as searcher:
+                results = await searcher.atext(query, max_results=limit)
+                # 处理并返回结果
+                return f"找到 {len(results)} 条结果..."
+        except Exception as e:
+            return f"搜索失败: {str(e)}"
+```
+
+#### 1.2 创建 `__init__.py` 导出配置
+
+```python
+"""my_complex_skill - 我的复杂技能"""
+from .my_skill import register_my_complex_skill
+
+__all__ = ["register_my_complex_skill"]
+```
+
+#### 1.3 创建 `SKILL.md` 描述文档
+
+```markdown
+# 我的复杂技能
+
+## 功能描述
+一句话描述技能功能...
+
+## 使用场景
+### ✅ 适用场景
+- 场景1
+- 场景2
+
+## 参数说明
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| query | string | 是 | - | 查询关键词 |
+
+## 使用示例
+```python
+# 示例1
+my_complex_skill(query="关键词")
+```
+
+## 返回结果格式
+- 结果1：xxx
+- 结果2：xxx
+
+## 异常处理
+| 错误类型 | 处理方式 |
+|----------|----------|
+| 网络错误 | 返回友好的错误提示 |
+
+## 注意事项
+1. 注意事项1
+2. 注意事项2
+```
+
+### 步骤 2：更新 skills/__init__.py
+
+```python
+from .calculator import register_calculator_tool
+from .weather import register_weather_tool
+from .web_search import register_web_search_tool
+from .my_complex_skill import register_my_complex_skill  # 新增
+
+__all__ = [
+    "register_calculator_tool", 
+    "register_weather_tool",
+    "register_web_search_tool",
+    "register_my_complex_skill"  # 新增
+]
+```
+
+### 步骤 3：更新 mcp_server.py
+
+```python
+from skills import (
+    register_calculator_tool, 
+    register_weather_tool, 
+    register_web_search_tool,
+    register_my_complex_skill  # 新增
+)
+
+# 注册所有技能工具
+register_calculator_tool(mcp)
+register_weather_tool(mcp)
+register_web_search_tool(mcp)
+register_my_complex_skill(mcp)  # 新增
+```
+
+### 步骤 4：安装额外依赖（如需要）
+
+如果新 skill 需要额外的 Python 包，在使用 `uv add`  导入或`requirements.txt` 中添加：
+
+```text
+uv add 包名称
+或
+包名称 >=版本号 #requirements.txt
+```
+
+然后运行：
+```bash
+uv sync
+# 或
+pip install 包名称
+```
+
+### 步骤 5：重启服务
+
+重新启动服务，新技能即可使用。
+
+### SKILL.md 规范
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| # 标题 | 是 | 技能名称 |
+| ## 功能描述 | 是 | 一句话说明技能作用 |
+| ## 使用场景 | 建议 | 列出适用场景 |
+| ## 参数说明 | 建议 | 表格形式说明参数 |
+| ## 使用示例 | 建议 | 代码和对话示例 |
+| ## 返回结果格式 | 建议 | 说明返回内容结构 |
+| ## 异常处理 | 建议 | 错误处理方式 |
+| ## 注意事项 | 建议 | 使用注意点 |
+
 ## 示例技能
 
 ### 计算器技能
