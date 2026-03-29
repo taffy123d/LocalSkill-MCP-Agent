@@ -817,13 +817,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Endpoint ID</label>
-                        <input type="text" id="endpoint-id" placeholder="输入终端ID" value="">
+                        <label>Model</label>
+                        <input type="text" id="model" placeholder="输入模型ID" value="">
                     </div>
 
                     <div class="form-group">
                         <label>Base URL</label>
-                        <input type="text" id="base-url" placeholder="API地址" value="https://ark.cn-beijing.volces.com/api/v3/chat/completions">
+                        <input type="text" id="base-url" placeholder="API地址" value="https://ark.cn-beijing.volces.com/api/v3">
                     </div>
 
                     <div class="btn-row">
@@ -894,12 +894,16 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script>
         // 配置状态
         let config = {
             apiKey: '',
-            endpointId: '',
-            baseUrl: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'
+            model: '',
+            baseUrl: 'https://ark.cn-beijing.volces.com/api/v3'
         };
 
         let isConnected = false;
@@ -909,6 +913,25 @@
         let currentSessionId = 'default';  // 当前会话ID
         let sessions = [];  // 会话列表
 
+        // 渲染 Markdown + KaTeX 数学公式
+        function renderMarkdown(text) {
+            // 先用 marked 解析 Markdown
+            let html = marked.parse(text);
+            // 创建临时容器用于 KaTeX 渲染
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            // 渲染数学公式
+            renderMathInElement(temp, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false,
+                trust: true
+            });
+            return temp.innerHTML;
+        }
+
         // 初始化
         async function init() {
             // 从后端获取配置
@@ -916,9 +939,9 @@
                 const response = await fetch(`${API_BASE_URL}/api/config`);
                 if (response.ok) {
                     const data = await response.json();
-                    config.apiKey = data.DOUBAO_API_KEY || '';
-                    config.endpointId = data.DOUBAO_ENDPOINT_ID || '';
-                    config.baseUrl = data.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
+                    config.apiKey = data.OPENAI_API_KEY || '';
+                    config.model = data.OPENAI_MODEL || '';
+                    config.baseUrl = data.OPENAI_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
                 }
             } catch (error) {
                 console.error('获取配置失败:', error);
@@ -926,7 +949,7 @@
 
             // 填充表单
             document.getElementById('api-key').value = config.apiKey;
-            document.getElementById('endpoint-id').value = config.endpointId;
+            document.getElementById('model').value = config.model;
             document.getElementById('base-url').value = config.baseUrl;
 
             updateConfigStatus();
@@ -934,7 +957,7 @@
             // 加载default会话的历史
             await loadSessionHistory(currentSessionId);
 
-            if (config.apiKey && config.endpointId) {
+            if (config.apiKey && config.model) {
                 testConnection();
             }
         }
@@ -1090,7 +1113,7 @@
             const configStatus = document.getElementById('config-status');
             const connectStatus = document.getElementById('connect-status');
             
-            const hasConfig = config.apiKey && config.endpointId;
+            const hasConfig = config.apiKey && config.model;
             configStatus.textContent = hasConfig ? '✅ 配置完整' : '⚠️ 配置缺失';
             configStatus.className = 'status-value ' + (hasConfig ? 'success' : 'warning');
             
@@ -1103,7 +1126,7 @@
         // 更新提示信息
         function updateInfoBox() {
             const container = document.getElementById('info-container');
-            const hasConfig = config.apiKey && config.endpointId;
+            const hasConfig = config.apiKey && config.model;
             
             if (!hasConfig) {
                 container.innerHTML = '<div class="info-box">👈 请先在左侧配置 API 密钥</div>';
@@ -1117,7 +1140,7 @@
         // 保存配置
         async function saveConfig() {
             config.apiKey = document.getElementById('api-key').value.trim();
-            config.endpointId = document.getElementById('endpoint-id').value.trim();
+            config.model = document.getElementById('model').value.trim();
             config.baseUrl = document.getElementById('base-url').value.trim();
             
             try {
@@ -1127,9 +1150,9 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        DOUBAO_API_KEY: config.apiKey,
-                        DOUBAO_ENDPOINT_ID: config.endpointId,
-                        DOUBAO_BASE_URL: config.baseUrl
+                        OPENAI_API_KEY: config.apiKey,
+                        OPENAI_MODEL: config.model,
+                        OPENAI_BASE_URL: config.baseUrl
                     })
                 });
                 
@@ -1152,8 +1175,8 @@
 
         // 测试连接
         async function testConnection() {
-            if (!config.apiKey || !config.endpointId) {
-                showToast('请先填写 API Key 和 Endpoint ID', 'error');
+            if (!config.apiKey || !config.model) {
+                showToast('请先填写 API Key 和 Model', 'error');
                 return;
             }
             
@@ -1165,7 +1188,7 @@
                     },
                     body: JSON.stringify({
                         api_key: config.apiKey,
-                        endpoint_id: config.endpointId,
+                        model: config.model,
                         base_url: config.baseUrl
                     })
                 });
@@ -1309,7 +1332,7 @@
                 },
                 body: JSON.stringify({
                     api_key: config.apiKey,
-                    endpoint_id: config.endpointId,
+                    model: config.model,
                     base_url: config.baseUrl,
                     message: userInput,
                     session_id: sessionId,  // 发送当前会话ID
@@ -1353,7 +1376,7 @@
                                 <span>思考过程</span>
                             </button>
                             <div class="reasoning-content" id="${reasoningId}">
-                                ${marked.parse(reasoning)}
+                                ${renderMarkdown(reasoning)}
                             </div>
                         </div>
                     `;
@@ -1367,9 +1390,9 @@
                         <strong>🔧 已调用工具：</strong>${toolName}
                     </div>`;
                     const markdownContent = content.replace(toolCallMatch[0], '');
-                    html += toolCallBadge + marked.parse(markdownContent);
+                    html += toolCallBadge + renderMarkdown(markdownContent);
                 } else {
-                    html += marked.parse(content);
+                    html += renderMarkdown(content);
                 }
 
                 contentDiv.innerHTML = html;
