@@ -1,5 +1,5 @@
 """
-豆包本地技能助手 - Flask 后端服务
+ToolKit本地技能Agent - Flask 后端服务
 """
 import asyncio
 import json
@@ -39,7 +39,8 @@ MAX_HISTORY = 20
 
 # ====================== MCP 工具管理 ======================
 def _clean_schema(schema):
-    """清理 JSON Schema，只保留豆包 API 支持的最小字段"""
+    """清理 JSON Schema，只保留 API 支持的最小字段"""
+
     if not isinstance(schema, dict):
         return schema
     result = {}
@@ -456,7 +457,7 @@ async def _chat_async(api_key, model, base_url, user_message, history, tools=Non
             "content": tool_result
         })
         
-        # 第二次调用豆包 API（让模型处理工具调用失败的情况）
+        # 第二次调用 API（让模型处理工具调用失败的情况）
         # 先转换消息列表中的对象
         final_messages = [_msg_to_dict(m) for m in messages]
         final_request_body = {
@@ -498,7 +499,7 @@ async def _chat_async(api_key, model, base_url, user_message, history, tools=Non
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """聊天接口 - 调用豆包 API 和 MCP 工具"""
+    """聊天接口 - 调用 API 和 MCP 工具"""
     data = request.json
     api_key = data.get('api_key', '')
     model = data.get('model', '')
@@ -764,7 +765,7 @@ def static_files(path):
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("豆包本地技能助手 - Flask 后端服务")
+    print("ToolKit本地技能Agent - Flask 后端服务")
     print("=" * 50)
     print("服务地址: http://localhost:5000")
     print("API 文档:")

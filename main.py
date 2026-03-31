@@ -138,7 +138,7 @@ async def chat_with_doubao(user_input: str, session_id: str = "default"):
 # ===================== 主程序入口 =====================
 async def main():
     print("=" * 50)
-    print("🤖 豆包本地技能助手（稳定版）")
+    print("🤖 ToolKit本地技能Agent（稳定版）")
     print("✅ 计算器 | 🌤️ 天气查询")
     print("=" * 50)
 
@@ -160,7 +160,7 @@ async def main():
         # 执行对话
         answer = await chat_with_doubao(user_query, session_id)
         print("\n" + "=" * 50)
-        print("🤖 豆包回答：")
+        print("🤖 Agent回答：")
         print(answer)
         print("=" * 50)
 
